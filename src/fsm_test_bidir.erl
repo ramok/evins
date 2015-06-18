@@ -65,7 +65,8 @@ handle_event(MM, SM, Term) ->
             RES = check_file_data(SM, Data),
             if RES -> SM;
             true -> ?ERROR(?ID, "corrupted received data. ~n", []),
-                    fsm:run_event(MM, SM#sm{event=alarm}, {})
+                    init:stop()
+                    %fsm:run_event(MM, SM#sm{event=alarm}, {})
             end;
 
         UUg ->
@@ -92,11 +93,14 @@ handle_write(_MM, SM, Term) ->
 
 handle_final(_MM, SM, Term) ->
     ?TRACE(?ID, "=========================== Final ~120p~n", [Term]),
-    fsm:clear_timeouts(SM#sm{event = eps}).
+    init:stop().
+    %fsm:clear_timeouts(SM#sm{event = eps}).
 
 -spec handle_alarm(any(), any(), any()) -> no_return().
-handle_alarm(_MM, SM, _Term) ->
-    exit({alarm, SM#sm.module}).
+handle_alarm(_MM, SM, Term) ->
+    ?TRACE(?ID, "-------------------------- ALARM ~p ~n", [Term]),
+    init:stop().
+    %exit({alarm, SM#sm.module}).
 
 % ------- Helper functions --------
 init_sm(SM) ->
