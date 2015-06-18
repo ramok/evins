@@ -38,7 +38,7 @@ stop(_SM)      -> ok.
 
 %%--------------------------------Handler functions-------------------------------
 handle_event(MM, SM, Term) ->
-    ?INFO(?ID, "HANDLE EVENT~n", []),
+    ?INFO(?ID, "HANDLE EVENT   ~p~n~n~n", [Term]),
     ?TRACE(?ID, "~p~n", [Term]),
     case Term of
         {timeout, Event} ->
@@ -74,14 +74,12 @@ handle_event(MM, SM, Term) ->
             SM
     end.
 
+handle_idle(_MM, SM, _Term) when SM#sm.event =:= internal ->
+    init_sm(SM);
+
 handle_idle(_MM, SM, Term) ->
-    SM1 =
-    if SM#sm.event =:= internal
-            -> init_sm(SM);
-    true    -> SM
-    end,
     ?TRACE(?ID, "!!!! handle_idle ~120p~n", [Term]),
-    SM1#sm{event = eps}.
+    SM#sm{event = eps}.
 
 handle_write(_MM, SM, Term) ->
     ?TRACE(?ID, "!!!! handle_write ~120p~n", [Term]),
@@ -122,7 +120,7 @@ open_file(SM, ETSFD) ->
     end.
 
 send_file_data(SM) ->
-    case read_file(SM, fd_send, random:uniform(3000) + 1000) of
+    case read_file(SM, fd_send, random:uniform(500) + 1) of
         error    -> error;
         Data     -> fsm:cast(SM, at, {send, {raw, Data}})
     end.
@@ -138,7 +136,7 @@ read_file(SM, ETSFD, Count) ->
     case readETS(SM, ETSFD) of
         empty   -> error;
         Fd      -> case file:read(Fd, Count) of
-                       {ok, Data}       -> ?TRACE(?ID, "file read data ~p fd: ~p ~n", [Data, ETSFD]),
+                       {ok, Data}       -> ?TRACE(?ID, "file read fd: ~p     data ~p ~n", [ETSFD, Data]),
                                            Data;
                        eof              -> file:close(Fd),
                                            error;
